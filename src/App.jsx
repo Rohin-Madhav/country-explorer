@@ -5,6 +5,8 @@ function App() {
   const [countries, setCountries] = useState([])
   const [searchTerm, setSearchTerm] = useState("")
   const [region, setRegion] = useState("")
+  const [currentPage, setCurrentPage] = useState(1)
+  const countriesPerPage = 12
 
   useEffect(() => {
     const fetchCountry = async () => {
@@ -18,15 +20,23 @@ function App() {
     }
     fetchCountry()
   }, [])
-
-
   const filteredCountries = countries.filter((c) => {
     const matchesSearch = c.name.common.toLowerCase().includes(searchTerm.toLowerCase())
-    const mathchesFilter = region ? c.region === region : true
-    return matchesSearch && mathchesFilter
+    const matchesFilter = region ? c.region === region : true
+    return matchesSearch && matchesFilter
   }
-
   );
+
+  const indexOfLastCountry = currentPage * countriesPerPage
+  const indexOfFirstCountry = indexOfLastCountry - countriesPerPage
+  const currentCountries = filteredCountries.slice(indexOfFirstCountry, indexOfLastCountry)
+  const totalPages = Math.ceil(filteredCountries.length / countriesPerPage);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, region]);
+
+
 
   return (
     <div>
@@ -34,7 +44,7 @@ function App() {
    p-6'>Explore All Countries 🌍</h1>
 
       <div className='flex p-5 place-content-between'>
-      {/* Search Bar */}
+        {/* Search Bar */}
 
         <div>
           <div style={{ margin: "20px 0" }}>
@@ -75,7 +85,7 @@ function App() {
       {/* Countries grid */}
       <div className="container mx-auto p-4">
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredCountries.map((c) => (
+          {currentCountries.map((c) => (
             <div
               key={c.name.common}
               className="group bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all duration-300 border border-gray-100"
@@ -114,7 +124,37 @@ function App() {
               </div>
             </div>
           ))}
+
         </div>
+      </div>
+      <div className="flex justify-center cursor-pointer items-center gap-3 p-4 mt-6">
+        <button
+          onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+          disabled={currentPage === 1}
+          className="px-4 py-2 bg-gray-300 rounded cursor-pointer  disabled:opacity-50"
+        >
+          Prev
+        </button>
+
+        {[...Array(totalPages)].map((_, i) => (
+          <button
+            key={i}
+            onClick={() => setCurrentPage(i + 1)}
+            className={`px-3 py-1 cursor-pointer  rounded ${currentPage === i + 1 ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}
+          >
+            {i + 1}
+          </button>
+        ))}
+
+        <button
+          onClick={() => setCurrentPage((prev) =>
+            prev < totalPages ? prev + 1 : prev
+          )}
+          disabled={currentPage === totalPages}
+          className="px-4 py-2 cursor-pointer  bg-gray-300 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
       </div>
     </div>
   )
